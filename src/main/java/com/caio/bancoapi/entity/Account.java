@@ -1,9 +1,6 @@
 package com.caio.bancoapi.entity;
 
-
 import jakarta.persistence.*;
-
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "accounts")
@@ -14,22 +11,13 @@ public class Account {
     private Long id;
 
     @Column(nullable = false)
-    private String nome;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AccountType tipoConta;
+    private String name;
 
     @Column(nullable = false)
-    private BigDecimal saldoInicial;
+    private String accountType;
 
-    public Account() {}
-
-    public Account(String nome, AccountType tipoConta, BigDecimal saldoInicial) {
-        this.nome = nome;
-        this.tipoConta = tipoConta;
-        this.saldoInicial = saldoInicial;
-    }
+    @Column(nullable = false)
+    private Double initialBalance;
 
     public Long getId() {
         return id;
@@ -39,27 +27,27 @@ public class Account {
         this.id = id;
     }
 
-    public String getNome() {
-        return nome;
+    public String getName() {
+        return name;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public AccountType getTipoConta() {
-        return tipoConta;
+    public String getAccountType() {
+        return accountType;
     }
 
-    public void setTipoConta(AccountType tipoConta) {
-        this.tipoConta = tipoConta;
+    public void setAccountType(String accountType) {
+        this.accountType = accountType;
     }
 
-    public BigDecimal getSaldoInicial() {
-        return saldoInicial;
+    public Double getInitialBalance() {
+        return initialBalance;
     }
 
-    public void setSaldoInicial(BigDecimal saldoInicial) {
-        this.saldoInicial = saldoInicial;
+    public void setInitialBalance(Double initialBalance) {
+        this.initialBalance = initialBalance;
     }
 }
