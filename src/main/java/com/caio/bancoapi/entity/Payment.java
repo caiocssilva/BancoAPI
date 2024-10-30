@@ -1,6 +1,8 @@
 package com.caio.bancoapi.entity;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -13,7 +15,7 @@ public class Payment {
 
     private Long accountId; // ID da conta associada ao pagamento
     private Double value; // Valor do pagamento
-    private Date date; // Data do pagamento
+    private LocalDateTime date; // Data do pagamento
     private String description; // Descrição do pagamento
 
     // Getters e Setters
@@ -41,11 +43,11 @@ public class Payment {
         this.value = value;
     }
 
-    public Date getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 

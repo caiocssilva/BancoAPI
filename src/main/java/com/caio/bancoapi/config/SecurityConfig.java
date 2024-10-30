@@ -15,7 +15,7 @@ public class SecurityConfig {
         http
                 .csrf().disable() // Desabilita a proteção CSRF para testes
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/accounts/create", "/api/accounts", "/api/accounts/**", "/api/payments/create").permitAll() // Permite acesso à rota de criação de contas
+                        .requestMatchers("/api/accounts/create", "/api/accounts", "/api/accounts/**", "/api/payments/**").permitAll() // Permite acesso à rota de criação de contas
                         .anyRequest().authenticated() // Requer autenticação para outras requisições
                 );
         return http.build();

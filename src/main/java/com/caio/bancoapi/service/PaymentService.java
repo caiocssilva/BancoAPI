@@ -7,6 +7,7 @@ import com.caio.bancoapi.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,8 +29,9 @@ public class PaymentService {
             throw new IllegalArgumentException("Saldo insuficiente para cobrir o pagamento.");
         }
 
-        // Atualiza o saldo da conta
+        // Atualiza o saldo da conta e a data do pagamento
         account.setInitialBalance(account.getInitialBalance() - payment.getValue());
+        payment.setDate(LocalDateTime.now());
         accountRepository.save(account); // Salva a conta atualizada
 
         return paymentRepository.save(payment); // Salva o pagamento
@@ -37,5 +39,12 @@ public class PaymentService {
 
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
+    }
+
+    // Método para retornar o saldo atualizado da conta
+    public double getUpdatedBalance(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+        return account.getInitialBalance();
     }
 }
