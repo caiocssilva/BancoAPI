@@ -1,5 +1,7 @@
 package com.caio.bancoapi.service;
 
+import com.caio.bancoapi.dto.PaymentResponseDTO;
+import com.caio.bancoapi.dto.TransactionReportDTO;
 import com.caio.bancoapi.entity.Account;
 import com.caio.bancoapi.entity.Payment;
 import com.caio.bancoapi.repository.AccountRepository;
@@ -7,8 +9,10 @@ import com.caio.bancoapi.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentService {
@@ -46,5 +50,31 @@ public class PaymentService {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
         return account.getInitialBalance();
+    }
+
+    // Método para gerar relatório de transações por conta e intervalo de datas
+    public TransactionReportDTO generateTransactionReport(Long accountId, LocalDate startDate, LocalDate endDate) {
+        // Converte as datas para LocalDateTime
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+
+        // Filtra os pagamentos da conta no intervalo de datas
+        List<Payment> payments = paymentRepository.findByAccountIdAndDateBetween(accountId, startDateTime, endDateTime);
+
+        // Mapeia para PaymentResponseDTO e calcula a soma total
+        List<PaymentResponseDTO> transactionList = payments.stream()
+                .map(payment -> new PaymentResponseDTO(
+                        payment.getId(),
+                        payment.getAccountId(),
+                        payment.getValue(),
+                        payment.getDate(),
+                        payment.getDescription(),
+                        getUpdatedBalance(payment.getAccountId())
+                ))
+                .collect(Collectors.toList());
+
+        double totalPayments = payments.stream().mapToDouble(Payment::getValue).sum();
+
+        return new TransactionReportDTO(transactionList, totalPayments);
     }
 }
