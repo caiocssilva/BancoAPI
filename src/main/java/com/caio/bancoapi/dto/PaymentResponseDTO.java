@@ -10,10 +10,11 @@ import java.time.LocalDateTime;
 public class PaymentResponseDTO {
     private Long id;
     private Long accountId;
+    private String accountHolder;
     private double value;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime date;
     private String description;
-    private double updatedBalance;
+    private double currentBalance;
 
 }

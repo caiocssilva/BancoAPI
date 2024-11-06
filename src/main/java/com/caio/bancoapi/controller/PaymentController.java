@@ -1,5 +1,6 @@
 package com.caio.bancoapi.controller;
 
+import com.caio.bancoapi.service.AccountService;
 import com.caio.bancoapi.dto.PaymentResponseDTO;
 import com.caio.bancoapi.dto.TransactionReportDTO;
 import com.caio.bancoapi.entity.Payment;
@@ -20,21 +21,26 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
+    @Autowired
+    private AccountService accountService;
+
     @PostMapping("/create")
     public ResponseEntity<PaymentResponseDTO> createPayment(@RequestBody Payment payment) {
         Payment createdPayment = paymentService.createPayment(payment);
 
-        // Obtém o saldo atualizado após o pagamento
-        double updatedBalance = paymentService.getUpdatedBalance(payment.getAccountId());
+        // Extrai o nome do titular da conta e o saldo atualizado
+        String accountHolder = accountService.getAccountById(createdPayment.getAccountId()).getName();
+        double currentBalance = paymentService.getUpdatedBalance((createdPayment.getAccountId()));
 
         // Constrói o DTO para a resposta
         PaymentResponseDTO responseDTO = new PaymentResponseDTO(
                 createdPayment.getId(),
                 createdPayment.getAccountId(),
+                accountHolder,
                 createdPayment.getValue(),
                 createdPayment.getDate(),
                 createdPayment.getDescription(),
-                updatedBalance
+                currentBalance
         );
 
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
@@ -47,14 +53,19 @@ public class PaymentController {
 
         // Mapeia cada pagamento para o DTO
         List<PaymentResponseDTO> responseDTOs = payments.stream()
-                .map(payment -> new PaymentResponseDTO(
-                        payment.getId(),
-                        payment.getAccountId(),
-                        payment.getValue(),
-                        payment.getDate(),
-                        payment.getDescription(),
-                        paymentService.getUpdatedBalance(payment.getAccountId())
-                ))
+                .map(payment -> {
+                    String accountHolder = accountService.getAccountById(payment.getAccountId()).getName();
+                    double currentBalance = paymentService.getUpdatedBalance(payment.getAccountId());
+                    return new PaymentResponseDTO(
+                            payment.getId(),
+                            payment.getAccountId(),
+                            accountHolder,
+                            payment.getValue(),
+                            payment.getDate(),
+                            payment.getDescription(),
+                            paymentService.getUpdatedBalance(payment.getAccountId())
+                    );
+                })
                 .collect(Collectors.toList());
 
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);

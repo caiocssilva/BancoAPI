@@ -14,11 +14,21 @@ public class Payment {
     private Long id;
 
     private Long accountId; // ID da conta associada ao pagamento
+    private String name;
     private Double value; // Valor do pagamento
     private LocalDateTime date; // Data do pagamento
     private String description; // Descrição do pagamento
+    private double currentBalance;
 
-    // Getters e Setters
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
     }
@@ -57,5 +67,13 @@ public class Payment {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public double getCurrentBalance() {
+        return currentBalance;
+    }
+
+    public void setCurrentBalance(double currentBalance) {
+        this.currentBalance = currentBalance;
     }
 }

@@ -28,16 +28,29 @@ public class PaymentService {
         Account account = accountRepository.findById(payment.getAccountId())
                 .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
 
+        // Log do saldo inicial e valor do pagamento
+        System.out.println("Saldo inicial da conta: " + account.getCurrentBalance());
+        System.out.println("Valor do pagamento: " + payment.getValue());
+
         // Verifica se o saldo da conta é suficiente
-        if (account.getInitialBalance() < payment.getValue()) {
+        if (account.getCurrentBalance() < payment.getValue()) {
             throw new IllegalArgumentException("Saldo insuficiente para cobrir o pagamento.");
         }
 
-        // Atualiza o saldo da conta e a data do pagamento
-        account.setInitialBalance(account.getInitialBalance() - payment.getValue());
-        payment.setDate(LocalDateTime.now());
-        accountRepository.save(account); // Salva a conta atualizada
+        // Define o saldo atual no pagamento antes de atualizar a conta
+        payment.setCurrentBalance(account.getCurrentBalance());
 
+        // Atualiza o saldo da conta
+        account.setCurrentBalance(account.getCurrentBalance() - payment.getValue());
+
+        // Define a data do pagamento
+        payment.setDate(LocalDateTime.now());
+
+        // Log do saldo após subtrair o pagamento
+        System.out.println("Saldo após pagamento: " + account.getCurrentBalance());
+        System.out.println("Saldo registrado no pagamento: " + payment.getCurrentBalance());
+
+        accountRepository.save(account); // Salva a conta atualizada
         return paymentRepository.save(payment); // Salva o pagamento
     }
 
@@ -49,7 +62,7 @@ public class PaymentService {
     public double getUpdatedBalance(Long accountId) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
-        return account.getInitialBalance();
+        return account.getCurrentBalance();
     }
 
     // Método para gerar relatório de transações por conta e intervalo de datas
@@ -58,18 +71,23 @@ public class PaymentService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
 
+        // Recupera o saldo inicial da conta
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+
         // Filtra os pagamentos da conta no intervalo de datas
         List<Payment> payments = paymentRepository.findByAccountIdAndDateBetween(accountId, startDateTime, endDateTime);
 
         // Mapeia para PaymentResponseDTO e calcula a soma total
         List<PaymentResponseDTO> transactionList = payments.stream()
                 .map(payment -> new PaymentResponseDTO(
-                        payment.getId(),
-                        payment.getAccountId(),
-                        payment.getValue(),
-                        payment.getDate(),
-                        payment.getDescription(),
-                        getUpdatedBalance(payment.getAccountId())
+                            payment.getId(),
+                            payment.getAccountId(),
+                            payment.getName(),
+                            payment.getValue(),
+                            payment.getDate(),
+                            payment.getDescription(),
+                            payment.getCurrentBalance() // Usa o saldo atual armazenado na conta
                 ))
                 .collect(Collectors.toList());
 

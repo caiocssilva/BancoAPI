@@ -1,8 +1,10 @@
 package com.caio.bancoapi.controller;
 
+import com.caio.bancoapi.dto.AccountResponseDTO;
 import com.caio.bancoapi.entity.Account;
 import com.caio.bancoapi.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +24,9 @@ public class AccountController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Account>> getAllAccounts() {
-        List<Account> accounts = accountService.getAllAccounts();
-        return ResponseEntity.ok(accounts);
+    public ResponseEntity<List<AccountResponseDTO>> getAllAccounts() {
+        List<AccountResponseDTO> accounts = accountService.getAllAccounts();
+        return new ResponseEntity<>(accounts, HttpStatus.OK);
     }
 
     // Método para obter uma conta pelo ID
