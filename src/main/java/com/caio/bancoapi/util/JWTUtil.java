@@ -3,6 +3,8 @@ package com.caio.bancoapi.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -12,7 +14,14 @@ import java.util.function.Function;
 
 @Component
 public class JWTUtil {
-    private String SECRET_KEY = "secreta123";
+
+    @Value("${jwt.secret.key}")
+    private String SECRET_KEY;
+
+    @PostConstruct
+    public void init() {
+        System.out.println("Chave secreta carregada: " + SECRET_KEY); // Verificação
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
