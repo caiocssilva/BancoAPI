@@ -1,15 +1,16 @@
 package com.caio.bancoapi.dto;
 
-public class AuthenticationResponse {
-
+public class UserResponseDTO {
+    private Long id;
     private String username;
     private String role;
-    private String jwt;
 
-    public AuthenticationResponse(String username, String role, String jwt) {
-        this.username = username;
-        this.role = role;
-        this.jwt = jwt;
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getUsername() {
@@ -26,13 +27,5 @@ public class AuthenticationResponse {
 
     public void setRole(String role) {
         this.role = role;
-    }
-
-    public String getJwt() {
-        return jwt;
-    }
-
-    public void setJwt(String jwt) {
-        this.jwt = jwt;
     }
 }

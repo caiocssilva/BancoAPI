@@ -24,6 +24,10 @@ public class Account {
 
     private double currentBalance;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     // Relacionamento com pagamentos
     @OneToMany(mappedBy = "accountId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
@@ -84,6 +88,14 @@ public class Account {
 
     public void setInitialBalance(Double initialBalance) {
         this.initialBalance = initialBalance;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public List<Payment> getPayments() {

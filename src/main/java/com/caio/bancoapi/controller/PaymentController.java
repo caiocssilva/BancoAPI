@@ -8,9 +8,13 @@ import com.caio.bancoapi.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,10 +30,22 @@ public class PaymentController {
 
     @PostMapping("/create")
     public ResponseEntity<PaymentResponseDTO> createPayment(@RequestBody Payment payment) {
+        // Cria o pagamento
         Payment createdPayment = paymentService.createPayment(payment);
 
-        // Extrai o nome do titular da conta e o saldo atualizado
-        String accountHolder = accountService.getAccountById(createdPayment.getAccountId()).getName();
+        // Extrai o nome de usuário e as autoridades do contexto de autenticação
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        // Chama o serviço para obter a conta, passando o id da conta, nome de usuário e autoridades
+        String accountHolder = accountService.getAccountById(
+                createdPayment.getAccountId(),
+                username,
+                authorities
+        ).getName();
+
+        // Obtém o saldo atualizado
         double currentBalance = paymentService.getUpdatedBalance((createdPayment.getAccountId()));
 
         // Constrói o DTO para a resposta
@@ -49,13 +65,27 @@ public class PaymentController {
     // Retorna uma lista de todos os pagamentos no sistema
     @GetMapping
     public ResponseEntity<List<PaymentResponseDTO>> getAllPayments() {
+        // Obtém todos os pagamentos
         List<Payment> payments = paymentService.getAllPayments();
 
         // Mapeia cada pagamento para o DTO
         List<PaymentResponseDTO> responseDTOs = payments.stream()
                 .map(payment -> {
-                    String accountHolder = accountService.getAccountById(payment.getAccountId()).getName();
+                    // Recupera o nome de usuário e as autoridades do contexto de autenticação
+                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                    String username = authentication.getName();
+                    Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+                    // Chama o serviço para obter a conta, passando o ID da conta, nome de usuário e autoridades
+                    String accountHolder = accountService.getAccountById(
+                            payment.getAccountId(),
+                            username,
+                            authorities
+                    ).getName();
+
+                    // Obtém o saldo atualizado
                     double currentBalance = paymentService.getUpdatedBalance(payment.getAccountId());
+
                     return new PaymentResponseDTO(
                             payment.getId(),
                             payment.getAccountId(),

@@ -2,14 +2,17 @@ package com.caio.bancoapi.controller;
 
 import com.caio.bancoapi.dto.AuthenticationRequest;
 import com.caio.bancoapi.dto.AuthenticationResponse;
+import com.caio.bancoapi.dto.UserResponseDTO;
 import com.caio.bancoapi.repository.UserRepository;
 import com.caio.bancoapi.entity.User;
 import com.caio.bancoapi.util.JWTUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,16 +40,32 @@ public class AuthController {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Usuário já existe");
         }
+
         user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
-        userRepository.save(user);
-        return ResponseEntity.ok("Usuário registrado com sucesso!");
+
+        // Salva o usuário no banco de dados
+        User createdUser = userRepository.save(user);
+
+        // Converter User para DTO
+        UserResponseDTO userResponseDTO = new UserResponseDTO();
+        userResponseDTO.setId(createdUser.getId());
+        userResponseDTO.setUsername(createdUser.getUsername());
+        userResponseDTO.setRole(createdUser.getRole());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDTO);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authRequest) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUsername());
-        final String jwt = jwtUtil.generateToken(userDetails.getUsername());
-        return ResponseEntity.ok(new AuthenticationResponse(jwt));
+
+        // Carregar os detalhes do usuário autenticado
+        final User user = userRepository.findByUsername(authRequest.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+
+        final String jwt = jwtUtil.generateToken(user.getUsername());
+
+        // Retornar o token JWT, nome de usuário e role
+        return ResponseEntity.ok(new AuthenticationResponse(user.getUsername(), user.getRole(), jwt));
     }
 }

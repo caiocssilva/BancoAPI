@@ -2,12 +2,18 @@ package com.caio.bancoapi.controller;
 
 import com.caio.bancoapi.dto.AccountResponseDTO;
 import com.caio.bancoapi.entity.Account;
+import com.caio.bancoapi.entity.User;
 import com.caio.bancoapi.service.AccountService;
+import com.caio.bancoapi.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -19,21 +25,51 @@ public class AccountController {
 
     @PostMapping("/create")
     public ResponseEntity<Account> createAccount(@RequestBody Account account) {
-        Account createdAccount = accountService.createAccount(account);
-        return ResponseEntity.ok(createdAccount);
+
+        // Recupera o nome de usuário do contexto de autenticação
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        // Chama o serviço para criar a conta associada ao usuário autenticado
+        Account createdAccount = accountService.createAccount(account, username);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
     }
 
     @GetMapping
     public ResponseEntity<List<AccountResponseDTO>> getAllAccounts() {
-        List<AccountResponseDTO> accounts = accountService.getAllAccounts();
-        return new ResponseEntity<>(accounts, HttpStatus.OK);
+        // Recupera o nome do usuário do contexto de autenticação
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        // Verifica se o usuário é um ADMIN
+        if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            // Se for ADMIN, retorna todas as contas
+            List<AccountResponseDTO> accounts = accountService.getAllAccounts();
+            return ResponseEntity.ok(accounts);
+        } else {
+            // Se for um USER, retorna apenas suas próprias contas
+            List<AccountResponseDTO> accounts = accountService.getAllAccounts();
+            return ResponseEntity.ok(accounts);
+        }
     }
 
     // Método para obter uma conta pelo ID
     @GetMapping("/{id}")
     public ResponseEntity<Account> getAccountById(@PathVariable Long id) {
-        Account account = accountService.getAccountById(id);
-        return ResponseEntity.ok(account);
+        // Recupera o nome do usuário do contexto de autenticação
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        // Chama o serviço para obter a conta, passando o nome de usuário e permissões
+        try {
+            Account account = accountService.getAccountById(id, username, authorities);
+            return ResponseEntity.ok(account);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
     }
 
     // Método para atualizar uma conta
