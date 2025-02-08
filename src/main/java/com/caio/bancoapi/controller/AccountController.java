@@ -2,9 +2,7 @@ package com.caio.bancoapi.controller;
 
 import com.caio.bancoapi.dto.AccountResponseDTO;
 import com.caio.bancoapi.entity.Account;
-import com.caio.bancoapi.entity.User;
 import com.caio.bancoapi.service.AccountService;
-import com.caio.bancoapi.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
